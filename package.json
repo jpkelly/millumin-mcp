@@ -1,0 +1,28 @@
+{
+  "name": "millumin-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for controlling Millumin (macOS media server) over OSC",
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "millumin-mcp": "dist/server.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "pretest": "npm run build",
+    "test": "node --test --test-timeout=10000 test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3"
+  }
+}
