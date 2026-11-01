@@ -1,4 +1,5 @@
 import dgram from "node:dgram";
+import dns from "node:dns/promises";
 import { encodeMessage, decodePacket, type OscArg, type OscMessage } from "./osc.js";
 
 export interface MilluminClientOptions {
@@ -12,7 +13,7 @@ export interface MilluminClientOptions {
 }
 
 // Thin UDP client around Millumin's OSC API. Sends are fire-and-forget;
-// feedback messages (prefixed "/millumin") are kept in a bounded ring buffer.
+// feedback messages (prefixed "/millumin") from `host` are kept in a bounded ring buffer.
 export class MilluminClient {
   private sock = dgram.createSocket("udp4");
   private listener: dgram.Socket | null = null;
@@ -25,8 +26,12 @@ export class MilluminClient {
 
   async start(): Promise<void> {
     if (this.opts.feedbackPort === undefined) return;
+    // Only keep feedback from the Millumin we control. Several Millumins on a
+    // show network can point their API feedback at the same port.
+    const { address: source } = await dns.lookup(this.opts.host, { family: 4 });
     const listener = dgram.createSocket("udp4");
-    listener.on("message", (packet) => {
+    listener.on("message", (packet, rinfo) => {
+      if (rinfo.address !== source) return;
       try {
         for (const msg of decodePacket(packet)) {
           this.feedback.push({ at: new Date().toISOString(), ...msg });
